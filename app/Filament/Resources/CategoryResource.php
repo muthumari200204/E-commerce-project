@@ -4,18 +4,24 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\CategoryResource\Pages;
 use App\Models\Category;
-use Filament\Forms;
 use Filament\Forms\Form;
-use Filament\Resources\Resource;
-use Filament\Tables;
-use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
+use Filament\Resources\Resource;
+use Filament\Tables\Table;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\ActionGroup;
+use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Tables\Actions\DeleteBulkAction;
 use Illuminate\Support\Str;
 
 class CategoryResource extends Resource
@@ -38,31 +44,28 @@ class CategoryResource extends Resource
                         ),
 
                     TextInput::make('slug')
-                        ->maxLength(255)
-                        ->readOnly()
                         ->required()
+                        ->readOnly()
                         ->unique(Category::class, 'slug', ignoreRecord: true),
                 ]),
 
-                
                 FileUpload::make('image')
                     ->image()
                     ->directory('categories')
                     ->visible(fn (string $operation) => $operation === 'create'),
 
-               
                 Placeholder::make('image_preview')
                     ->label('Image')
                     ->content(fn ($record) =>
                         $record && $record->image
-                            ? '<img src="' . asset('storage/' . $record->image) . '" width="100" />'
+                            ? '<img src="' . asset('storage/' . $record->image) . '" width="100">'
                             : 'No image available'
                     )
                     ->visible(fn (string $operation) => $operation === 'edit')
                     ->extraAttributes(['class' => 'mt-2']),
 
                 Toggle::make('is_active')
-                    ->label('Is active')
+                    ->label('Is Active')
                     ->required(),
             ]),
         ]);
@@ -72,32 +75,29 @@ class CategoryResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')->searchable(),
-                Tables\Columns\TextColumn::make('slug')->searchable(),
-                Tables\Columns\ImageColumn::make('image'),
-                Tables\Columns\IconColumn::make('is_active')->boolean(),
-                Tables\Columns\TextColumn::make('created_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('name')->searchable()->sortable(),
+                TextColumn::make('slug')->searchable()->sortable(),
+                ImageColumn::make('image')->label('Image'),
+                IconColumn::make('is_active')->label('Active')->boolean(),
+                TextColumn::make('created_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('updated_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->filters([])
             ->actions([
-                
                 ActionGroup::make([
                     Action::make('view')
                         ->label('View')
                         ->icon('heroicon-o-eye')
                         ->color('gray')
-                        ->url(fn ($record) => route('filament.admin.resources.brands.edit', $record))
+                        ->url(fn ($record) => route('filament.admin.resources.categories.edit', ['record' => $record]))
                         ->openUrlInNewTab(),
 
                     EditAction::make(),
                     DeleteAction::make(),
                 ]),
             ])
-            
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }

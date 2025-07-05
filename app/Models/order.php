@@ -3,31 +3,33 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class order extends Model
+class Order extends Model
 {
-    protected $fillable =[
+    protected $fillable = [
         'user_id',
+        'payment_method',
         'grand_total',
-        'payement_method',
-        'payment_ststus',
+        'payment_status',
         'status',
         'currency',
-        'shipping_amount',
-        'shippimg_method',
+        'shipping_method',
         'notes',
     ];
-       public function user(){
-    return $this->belongsTo(user::class);
-  }
 
-       public function items(){
-    return $this->hasMany(orderitem::class);
-  }
+    public function addresses(): HasMany
+    {
+        return $this->hasMany(Address::class);
+    }
 
-  public function address(){
-    return $this->hasOne(address::class);
-  }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function items()
+    {
+        return $this->hasMany(OrderItem::class);
+    }
 }
-
-

@@ -2,39 +2,42 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class product extends Model
+class Product extends Model
 {
-    protected $fillable=[   
-     'brand_id',
-     'category_id',
-     'name',
-     'slug', 
-     'images',
-     'description',
-     'price',
-     'is_active',
-     'is_featured',
-     'in_stock',
-     'on_sale',
+    use HasFactory;
 
-     ];
-      
-    
-  protected  $casts = [
-    'images'=> 'array'
-  ];
-  public function category(){
-     return $this->belongsTo('category::class');
+    protected $fillable = [
+        'name',
+        'slug',
+        'description',
+        'images',
+        'price',
+        'category_id',
+        'brand_id',
+        'in_stock',
+        'is_featured',
+        'on_sale',
+    ];
 
-  }
-    public function brand(){
-     return $this->belongsTo('brand::class');
-     }
-     public function orderitem(){
-     return $this->hasmony('orderitem::class');
-     
-  }
-   
+    protected $casts = [
+        'images' => 'array',
+        'in_stock' => 'boolean',
+        'is_featured' => 'boolean',
+        'on_sale' => 'boolean',
+        'price' => 'decimal:2',
+    ];
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function brand(): BelongsTo
+    {
+        return $this->belongsTo(Brand::class);
+    }
 }

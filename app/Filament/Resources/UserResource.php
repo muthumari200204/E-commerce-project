@@ -3,31 +3,30 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
-use App\Filament\Resources\UserResource\RelationManagers;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Pages\Page;
-use Filament\Resources\Pages\CreateRecord;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use GuzzleHttp\Promise\Create;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Illuminate\Validation\Rules\Email;
-use function Pest\Laravel\instance;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\ActionGroup;
+use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Tables\Actions\DeleteBulkAction;
 
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
+  
 
-   public static function form(Form $form): Form
-{
-    return $form
-        ->schema([
+    public static function form(Form $form): Form
+    {
+        return $form->schema([
             Forms\Components\TextInput::make('name')
                 ->required(),
 
@@ -38,70 +37,49 @@ class UserResource extends Resource
                 ->unique(ignoreRecord: true)
                 ->required(),
 
+            Forms\Components\DateTimePicker::make('email_verified_at')
+                ->label('Email Verified At')
+                ->default(now()),
 
-                  Forms\Components\DateTimePicker::make('email_verified_at')
-                    ->label('Email Verified At')
-                    ->default(now()),
-
-
-                 Forms\Components\TextInput::make('password')
-                 ->password()
-                 ->dehydrated(fn($state)=> filled($state))
-                 ->required(fn(Page $livewire) :bool => $livewire instanceof CreateRecord) ,
-
+            Forms\Components\TextInput::make('password')
+                ->password()
+                ->dehydrated(fn ($state) => filled($state))
+                ->required(fn (Page $livewire): bool => $livewire instanceof \Filament\Resources\Pages\CreateRecord),
         ]);
-}
-
+    }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')
-
-               ->searchable(),
-                Tables\Columns\TextColumn::make('email')
-
-                ->searchable(),
-                Tables\Columns\TextColumn::make('email_verified_at')
-                ->dateTime()
-                ->sortable(),
-
-                Tables\Columns\TextColumn::make('created_at')
-                ->dateTime()
-                ->sortable()
-                
-                ])
-            ->filters([
-                //
+                Tables\Columns\TextColumn::make('name')->searchable(),
+                Tables\Columns\TextColumn::make('email')->searchable(),
+                Tables\Columns\TextColumn::make('email_verified_at')->dateTime()->sortable(),
+                Tables\Columns\TextColumn::make('created_at')->dateTime()->sortable(),
             ])
-           ->actions([
-                
+            ->actions([
                 ActionGroup::make([
                     Action::make('view')
                         ->label('View')
                         ->icon('heroicon-o-eye')
                         ->color('gray')
-                        ->url(fn ($record) => route('filament.admin.resources.brands.edit', $record))
+                        ->url(fn ($record) => route('filament.admin.resources.users.edit', ['record' => $record]))
                         ->openUrlInNewTab(),
 
                     EditAction::make(),
                     DeleteAction::make(),
                 ]),
             ])
-
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array

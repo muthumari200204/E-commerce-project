@@ -3,26 +3,22 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class address extends Model
+class Address extends Model
 {
-   protected $fillable =[
-     
+    protected $fillable = [
         'order_id',
-        'first_name',
-        'last_name',
+        'full_name',
         'phone',
-        'street_address',
         'city',
         'state',
-        'zip_code'
-];
+        'zip_code',
+        'street_address',
+    ];
 
- public function order(){
-    return $this->belongsTo(order::class);
-  }
-   public function getFullNameAttribute(){
-    return "{this->first_name} {this->last_name}";
-  }
+    public function order(): BelongsTo
+    {
+        return $this->belongsTo(Order::class);
+    }
 }
-
