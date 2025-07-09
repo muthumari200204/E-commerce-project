@@ -4,43 +4,56 @@ namespace App\Filament\Resources\OrderResource\RelationManagers;
 
 use Filament\Forms;
 use Filament\Tables;
+use Filament\Forms\Form;
+use Filament\Tables\Table;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Actions\CreateAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
 
 class AddressRelationManager extends RelationManager
 {
-    protected static string $relationship = 'addresses';
-    protected static ?string $title = 'Address';
+    // This tells Filament to use $record->user->addresses
+    protected static string $relationship = 'user.addresses';
 
-    public function form(Forms\Form $form): Forms\Form
+    protected static ?string $title = 'Address'; // Section title
+    protected static ?string $label = 'Address';
+    protected static ?string $pluralLabel = 'Addresses';
+
+    public function form(Form $form): Form
     {
         return $form->schema([
-            TextInput::make('full_name')->required(),
+            TextInput::make('full_name')->required()->label('Full Name'),
             TextInput::make('phone')->required(),
             TextInput::make('city')->required(),
             TextInput::make('state')->required(),
-            TextInput::make('zip_code')->required(),
-            TextInput::make('street_address')->required(),
+            TextInput::make('zip_code')->required()->label('Zip Code'),
+            TextInput::make('street_address')->required()->label('Street Address'),
         ]);
     }
 
-    public function table(Tables\Table $table): Tables\Table
+    public function table(Table $table): Table
     {
         return $table
             ->columns([
-                TextColumn::make('full_name')->sortable()->searchable(),
-                TextColumn::make('phone'),
+                TextColumn::make('full_name')->label('Full Name')->sortable()->searchable(),
+                TextColumn::make('phone')->sortable()->searchable(),
                 TextColumn::make('city'),
                 TextColumn::make('state'),
-                TextColumn::make('zip_code'),
+                TextColumn::make('zip_code')->label('Zip Code'),
+                TextColumn::make('street_address')->label('Street Address'),
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make()->label('New address'),
+                CreateAction::make()
+                    ->label('New address')
+                    ->color('warning')
+                    ->icon('heroicon-o-plus'),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                EditAction::make(),
+                DeleteAction::make(),
             ]);
     }
 }
