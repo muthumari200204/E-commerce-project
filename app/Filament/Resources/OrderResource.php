@@ -8,19 +8,12 @@ use Filament\Tables;
 use Filament\Resources\Resource;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
-use Filament\Forms\Components\Group;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\Radio;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Repeater;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\BadgeColumn;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\DeleteAction;
 use App\Filament\Resources\OrderResource\Pages;
-use App\Filament\Resources\OrderResource\RelationManagers\AddressRelationManager;
+use App\Filament\Resources\OrderResource\RelationManagers\UserAddressesRelationManager;
+use Filament\Forms\Components\{Group, Section, Select, TextInput, Textarea, Repeater, Radio};
+use Filament\Tables\Columns\{TextColumn, BadgeColumn};
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Enums\FiltersLayout;
 
 class OrderResource extends Resource
 {
@@ -33,14 +26,12 @@ class OrderResource extends Resource
         return $form->schema([
             Section::make('Order Information')->schema([
                 Group::make()->schema([
-                    Select::make('user_id')
-                        ->label('Customer')
+                    Select::make('user_id')->label('Customer')
                         ->relationship('user', 'name')
                         ->searchable()
                         ->required(),
 
                     Select::make('payment_method')
-                        ->label('Payment Method')
                         ->options([
                             'cod' => 'Cash on Delivery',
                             'stripe' => 'Stripe',
@@ -48,90 +39,43 @@ class OrderResource extends Resource
                         ])
                         ->required(),
 
-                    TextInput::make('grand_total')
-                        ->label('Grand Total')
-                        ->numeric()
-                        ->prefix('INR ')
-                        ->readOnly(),
+                    TextInput::make('grand_total')->numeric()->prefix('₹')->readOnly(),
                 ])->columns(3),
 
-                Repeater::make('items')
-                    ->label('Items')
-                    ->relationship()
-                    ->schema([
-                        Select::make('product_id')
-                            ->label('Product')
-                            ->relationship('product', 'name')
-                            ->required(),
-
-                        TextInput::make('quantity')
-                            ->numeric()
-                            ->default(1)
-                            ->required()
-                            ->reactive(),
-
-                        TextInput::make('unit_amount')
-                            ->numeric()
-                            ->required()
-                            ->reactive(),
-
-                        TextInput::make('total_amount')
-                            ->numeric()
-                            ->readOnly()
-                            ->afterStateHydrated(function ($state, callable $set, $get) {
-                                $set('total_amount', $get('quantity') * $get('unit_amount'));
-                            })
-                            ->dehydrated(true),
-                    ])
-                    ->afterStateUpdated(function (callable $set, $state) {
-                        $grandTotal = collect($state)->sum('total_amount');
-                        $set('grand_total', $grandTotal);
-                    })
-                    ->columns(4)
-                    ->defaultItems(1),
+                Repeater::make('items')->relationship()->schema([
+                    Select::make('product_id')->relationship('product', 'name')->required(),
+                    TextInput::make('quantity')->numeric()->default(1)->required()->reactive(),
+                    TextInput::make('unit_amount')->numeric()->required()->reactive(),
+                    TextInput::make('total_amount')->numeric()->readOnly()
+                        ->afterStateHydrated(fn ($state, $set, $get) =>
+                            $set('total_amount', $get('quantity') * $get('unit_amount')))
+                        ->dehydrated(true),
+                ])->afterStateUpdated(fn ($set, $state) =>
+                    $set('grand_total', collect($state)->sum('total_amount')))
+                    ->columns(4),
 
                 Group::make()->schema([
-                    Select::make('payment_status')
-                        ->label('Payment Status')
-                        ->options([
-                            'pending' => 'Pending',
-                            'paid' => 'Paid',
-                            'failed' => 'Failed',
-                        ])
-                        ->required(),
+                    Select::make('payment_status')->options([
+                        'pending' => 'Pending',
+                        'paid' => 'Paid',
+                        'failed' => 'Failed',
+                    ])->required(),
 
-                    Radio::make('status')
-                        ->label('Order Status')
-                        ->options([
-                            'new' => 'New',
-                            'processing' => 'Processing',
-                            'shipped' => 'Shipped',
-                            'delivered' => 'Delivered',
-                            'cancelled' => 'Cancelled',
-                        ])
-                        ->inline()
-                        ->required(),
+                    Radio::make('status')->options([
+                        'new' => 'New',
+                        'processing' => 'Processing',
+                        'shipped' => 'Shipped',
+                        'delivered' => 'Delivered',
+                        'cancelled' => 'Cancelled',
+                    ])->inline()->required(),
                 ])->columns(2),
 
                 Group::make()->schema([
-                    Select::make('currency')
-                        ->options([
-                            'inr' => 'INR',
-                            'usd' => 'USD',
-                        ])
-                        ->required(),
-
-                    Select::make('shipping_method')
-                        ->options([
-                            'ups' => 'UPS',
-                            'fedex' => 'FedEx',
-                        ])
-                        ->required(),
+                    Select::make('currency')->options(['inr' => 'INR', 'usd' => 'USD'])->required(),
+                    Select::make('shipping_method')->options(['ups' => 'UPS', 'fedex' => 'FedEx'])->required(),
                 ])->columns(2),
 
-                Textarea::make('notes')
-                    ->rows(3)
-                    ->placeholder('Any notes...'),
+                Textarea::make('notes')->rows(3),
             ]),
         ]);
     }
@@ -142,33 +86,62 @@ class OrderResource extends Resource
             ->columns([
                 TextColumn::make('user.name')->label('Customer')->sortable()->searchable(),
                 TextColumn::make('grand_total')->label('Grand Total')->money('INR'),
-                TextColumn::make('payment_method')->label('Payment'),
-                BadgeColumn::make('payment_status')->colors([
-                    'success' => 'paid',
-                    'warning' => 'pending',
-                    'danger' => 'failed',
-                ]),
-                TextColumn::make('currency'),
-                TextColumn::make('shipping_method'),
-                BadgeColumn::make('status')->colors([
-                    'primary' => 'new',
-                    'warning' => 'processing',
-                    'info' => 'shipped',
-                    'success' => 'delivered',
-                    'danger' => 'cancelled',
-                ]),
-                TextColumn::make('created_at')->dateTime(),
+                TextColumn::make('payment_method')->label('Payment Method'),
+                BadgeColumn::make('payment_status')->label('Payment Status')->color(fn ($state) => match ($state) {
+                    'paid' => 'success',
+                    'pending' => 'warning',
+                    'failed' => 'danger',
+                }),
+                TextColumn::make('currency')->label('Currency'),
+                TextColumn::make('shipping_method')->label('Shipping Method'),
+                BadgeColumn::make('status')->label('Status')->formatStateUsing(fn ($state) => ucfirst($state))
+                    ->color(fn ($state) => match ($state) {
+                        'new' => 'primary',
+                        'processing' => 'warning',
+                        'shipped' => 'info',
+                        'delivered' => 'success',
+                        'cancelled' => 'danger',
+                        default => 'gray',
+                    }),
+                TextColumn::make('created_at')->label('Created')->dateTime(),
+            ])
+            ->filtersLayout(FiltersLayout::AboveContent)
+            ->filters([
+                Filter::make('New')
+                    ->label('New')
+                    ->query(fn ($query) => $query->where('status', 'new')),
+
+                Filter::make('Processing')
+                    ->label('Processing')
+                    ->query(fn ($query) => $query->where('status', 'processing')),
+
+                Filter::make('Shipped')
+                    ->label('Shipped')
+                    ->query(fn ($query) => $query->where('status', 'shipped')),
+
+                Filter::make('Delivered')
+                    ->label('Delivered')
+                    ->query(fn ($query) => $query->where('status', 'delivered')),
+
+                Filter::make('Cancelled')
+                    ->label('Cancelled')
+                    ->query(fn ($query) => $query->where('status', 'cancelled')),
             ])
             ->actions([
-                EditAction::make(),
-                DeleteAction::make(),
-            ]);
+                Tables\Actions\ViewAction::make(),
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
+            ])
+            ->bulkActions([
+                Tables\Actions\DeleteBulkAction::make(),
+            ])
+            ->defaultSort('created_at', 'desc');
     }
 
     public static function getRelations(): array
     {
         return [
-            AddressRelationManager::class,
+            UserAddressesRelationManager::class,
         ];
     }
 
@@ -178,6 +151,7 @@ class OrderResource extends Resource
             'index' => Pages\ListOrders::route('/'),
             'create' => Pages\CreateOrder::route('/create'),
             'edit' => Pages\EditOrder::route('/{record}/edit'),
+            'view' => Pages\ViewOrder::route('/{record}'),
         ];
     }
 }
