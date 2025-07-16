@@ -11,16 +11,14 @@ return new class extends Migration {
             $table->id();
 
             // ✅ Both foreign keys
-            $table->foreignId('order_id')->constrained()->onDelete('cascade');
-            $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
-
+          $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('full_name');
             $table->string('phone');
             $table->string('city');
             $table->string('state');
             $table->string('zip_code');
-            $table->text('street_address');
-
+            $table->string('street_address');
             $table->timestamps();
         });
     }
