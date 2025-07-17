@@ -27,9 +27,9 @@ use Illuminate\Support\Str;
 class CategoryResource extends Resource
 {
     protected static ?string $model = Category::class;
-
     protected static ?string $navigationIcon = 'heroicon-o-tag';
-protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 3;
+
     public static function form(Form $form): Form
     {
         return $form->schema([
@@ -39,19 +39,22 @@ protected static ?int $navigationSort = 3;
                         ->required()
                         ->maxLength(255)
                         ->live()
-                        ->afterStateUpdated(fn (string $operation, $state, callable $set) =>
-                            $operation === 'create' ? $set('slug', Str::slug($state)) : null
-                        ),
+                        ->afterStateUpdated(function (string $operation, $state, callable $set) {
+                            if ($operation === 'create') {
+                                $set('slug', Str::slug($state));
+                            }
+                        }),
 
                     TextInput::make('slug')
                         ->required()
                         ->readOnly()
-                        ->unique(Category::class, 'slug', ignoreRecord: true),
+                        ->unique(ignoreRecord: true),
                 ]),
 
                 FileUpload::make('image')
                     ->image()
                     ->directory('categories')
+                    ->visibility('public')
                     ->visible(fn (string $operation) => $operation === 'create'),
 
                 Placeholder::make('image_preview')
@@ -66,6 +69,7 @@ protected static ?int $navigationSort = 3;
 
                 Toggle::make('is_active')
                     ->label('Is Active')
+                    ->default(true)
                     ->required(),
             ]),
         ]);
@@ -75,12 +79,20 @@ protected static ?int $navigationSort = 3;
     {
         return $table
             ->columns([
-                TextColumn::make('name')->searchable()->sortable(),
-                TextColumn::make('slug')->searchable()->sortable(),
+                TextColumn::make('name')->sortable()->searchable(),
+                TextColumn::make('slug')->sortable()->searchable(),
                 ImageColumn::make('image')->label('Image'),
                 IconColumn::make('is_active')->label('Active')->boolean(),
-                TextColumn::make('created_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('created_at')
+                    ->label('Created')
+                    ->dateTime('d M Y')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('updated_at')
+                    ->label('Updated')
+                    ->dateTime('d M Y')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->actions([
                 ActionGroup::make([

@@ -8,7 +8,7 @@ use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Resources\Components\Tab;
 use Illuminate\Database\Eloquent\Builder;
-use App\Filament\Resources\OrderResource\Widgets\OrderStats; // ✅ correct widget name
+use App\Filament\Widgets\OrderStats;
 
 class ListOrders extends ListRecords
 {
@@ -46,7 +46,7 @@ class ListOrders extends ListRecords
     protected function getHeaderWidgets(): array
     {
         return [
-            OrderStats::class, 
+            OrderStats::class,
         ];
     }
 }

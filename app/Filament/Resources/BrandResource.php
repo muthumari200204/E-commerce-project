@@ -33,11 +33,10 @@ use Filament\Tables\Actions\ActionGroup;
 class BrandResource extends Resource
 {
     protected static ?string $model = Brand::class;
-
     protected static ?string $navigationIcon = 'heroicon-o-computer-desktop';
-
     protected static ?string $recordTitleAttribute = 'name';
     protected static ?int $navigationSort = 2;
+
     public static function form(Form $form): Form
     {
         return $form->schema([
@@ -47,25 +46,26 @@ class BrandResource extends Resource
                         ->required()
                         ->maxLength(255)
                         ->live()
-                        ->afterStateUpdated(fn (string $operation, $state, callable $set) =>
-                            $operation === 'create' ? $set('slug', Str::slug($state)) : null
-                        ),
+                        ->afterStateUpdated(function (string $operation, $state, callable $set) {
+                            if ($operation === 'create') {
+                                $set('slug', Str::slug($state));
+                            }
+                        }),
 
                     TextInput::make('slug')
                         ->maxLength(255)
                         ->readOnly()
                         ->required()
-                        ->unique(Brand::class, 'slug', ignoreRecord: true),
+                        ->unique(ignoreRecord: true),
                 ]),
 
-                // Show image upload only on create
                 FileUpload::make('image')
                     ->image()
                     ->directory('brands')
+                    ->visibility('public')
                     ->required()
                     ->visible(fn (string $operation) => $operation === 'create'),
 
-                // Show image preview on edit
                 Placeholder::make('image_preview')
                     ->label('Image')
                     ->content(fn ($record) =>
@@ -77,7 +77,8 @@ class BrandResource extends Resource
                     ->extraAttributes(['class' => 'mt-2']),
 
                 Toggle::make('is_active')
-                    ->label('Is active')
+                    ->label('Is Active')
+                    ->default(true)
                     ->required(),
             ]),
         ]);
@@ -87,21 +88,28 @@ class BrandResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('name')->searchable(),
-                TextColumn::make('slug')->searchable(),
-                ImageColumn::make('image'),
-                IconColumn::make('is_active')->boolean(),
-                TextColumn::make('created_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('name')->searchable()->sortable(),
+                TextColumn::make('slug')->searchable()->sortable(),
+                ImageColumn::make('image')->label('Image'),
+                IconColumn::make('is_active')->label('Active')->boolean(),
+                TextColumn::make('created_at')
+                    ->label('Created')
+                    ->dateTime('d M Y')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('updated_at')
+                    ->label('Updated')
+                    ->dateTime('d M Y')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->actions([
-                // 👇 Grouped actions inside dropdown — remove ActionGroup if you want separate buttons
                 ActionGroup::make([
                     Action::make('view')
                         ->label('View')
                         ->icon('heroicon-o-eye')
                         ->color('gray')
-                        ->url(fn ($record) => route('filament.admin.resources.brands.edit', $record))
+                        ->url(fn ($record) => route('filament.admin.resources.brands.edit', ['record' => $record]))
                         ->openUrlInNewTab(),
 
                     EditAction::make(),

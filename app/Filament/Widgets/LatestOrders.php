@@ -16,7 +16,9 @@ class LatestOrders extends BaseWidget
     public function table(Table $table): Table
     {
         return $table
-            ->query(Order::query()->latest())
+            ->query(
+                Order::query()->latest()->limit(5) // Limit added to match pagination size
+            )
             ->defaultPaginationPageOption(5)
             ->columns([
                 Tables\Columns\TextColumn::make('id')
@@ -24,14 +26,15 @@ class LatestOrders extends BaseWidget
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('user.name')
-                    ->label('User')
+                    ->label('Customer')
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('grand_total')
-                    ->label('Grand total')
+                    ->label('Total')
                     ->money('INR'),
 
                 Tables\Columns\TextColumn::make('status')
+                    ->label('Status')
                     ->badge()
                     ->sortable()
                     ->color(fn(string $state): string => match ($state) {
@@ -40,13 +43,15 @@ class LatestOrders extends BaseWidget
                         'shipped' => 'info',
                         'delivered' => 'success',
                         'cancelled' => 'danger',
-                        default => 'gray',
+                        default => 'secondary',
                     }),
 
                 Tables\Columns\TextColumn::make('payment_method')
+                    ->label('Payment')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('payment_status')
+                    ->label('Payment Status')
                     ->badge()
                     ->sortable(),
 
@@ -55,7 +60,7 @@ class LatestOrders extends BaseWidget
                     ->dateTime('M d, Y H:i:s'),
             ])
             ->actions([
-                Action::make('View order')
+                Action::make('View')
                     ->url(fn(Order $record) => OrderResource::getUrl('view', ['record' => $record]))
                     ->icon('heroicon-o-eye')
                     ->color('info'),

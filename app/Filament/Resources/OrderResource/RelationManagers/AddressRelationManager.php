@@ -15,10 +15,9 @@ use Filament\Tables\Columns\TextColumn;
 
 class AddressRelationManager extends RelationManager
 {
-    // This tells Filament to use $record->user->addresses
-    protected static string $relationship = 'user.addresses';
+    protected static string $relationship = 'userAddresses';
 
-    protected static ?string $title = 'Address'; // Section title
+    protected static ?string $title = 'Address';
     protected static ?string $label = 'Address';
     protected static ?string $pluralLabel = 'Addresses';
 
@@ -38,7 +37,7 @@ class AddressRelationManager extends RelationManager
     {
         return $table
             ->columns([
-                TextColumn::make('full_name')->label('Full Name')->sortable()->searchable(),
+                TextColumn::make('full_name')->sortable()->searchable(),
                 TextColumn::make('phone')->sortable()->searchable(),
                 TextColumn::make('city'),
                 TextColumn::make('state'),

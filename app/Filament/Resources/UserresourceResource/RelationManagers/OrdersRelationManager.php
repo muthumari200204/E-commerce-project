@@ -10,6 +10,9 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Tables\Actions\BulkActionGroup;
 
 class OrdersRelationManager extends RelationManager
 {
@@ -20,6 +23,7 @@ class OrdersRelationManager extends RelationManager
     {
         return $form->schema([
             Forms\Components\Select::make('status')
+                ->label('Order Status')
                 ->required()
                 ->options([
                     'new' => 'New',
@@ -28,6 +32,7 @@ class OrdersRelationManager extends RelationManager
                     'delivered' => 'Delivered',
                     'cancelled' => 'Cancelled',
                 ]),
+
             Forms\Components\TextInput::make('grand_total')
                 ->required()
                 ->numeric()
@@ -40,20 +45,17 @@ class OrdersRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('id')
             ->columns([
-                Tables\Columns\TextColumn::make('id')->sortable(),
+                Tables\Columns\TextColumn::make('id')
+                    ->label('Order ID')
+                    ->sortable(),
 
-                Tables\Columns\TextColumn::make('grand_total')->money('INR'),
+                Tables\Columns\TextColumn::make('grand_total')
+                    ->label('Total')
+                    ->money('INR'),
 
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'new' => 'info',
-                        'processing' => 'warning',
-                        'shipped' => 'success',
-                        'delivered' => 'success',
-                        'cancelled' => 'danger',
-                        default => 'gray',
-                    })
+                    ->sortable()
                     ->icon(fn (string $state): string => match ($state) {
                         'new' => 'heroicon-m-sparkles',
                         'processing' => 'heroicon-m-arrow-path',
@@ -62,35 +64,46 @@ class OrdersRelationManager extends RelationManager
                         'cancelled' => 'heroicon-m-x-circle',
                         default => 'heroicon-m-question-mark-circle',
                     })
-                    ->sortable(),
+                    ->color(fn (string $state): string => match ($state) {
+                        'new' => 'info',
+                        'processing' => 'warning',
+                        'shipped' => 'primary',
+                        'delivered' => 'success',
+                        'cancelled' => 'danger',
+                        default => 'gray',
+                    }),
 
                 Tables\Columns\TextColumn::make('payment_method')
+                    ->label('Payment Method')
                     ->sortable()
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('payment_status')
-                    ->sortable()
+                    ->label('Payment Status')
                     ->badge()
+                    ->sortable()
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Order Date')
-                    ->dateTime(), 
+                    ->dateTime('d M Y, h:i A'),
             ])
             ->headerActions([
+                // Uncomment if you want to allow order creation from here
                 // Tables\Actions\CreateAction::make(),
             ])
             ->actions([
                 Action::make('view order')
-                    ->url(fn (Order $record): string => OrderResource::getUrl('view', ['record' => $record]))
+                    ->label('View')
+                    ->icon('heroicon-o-eye')
                     ->color('info')
-                    ->icon('heroicon-o-eye'),
-                
-                Tables\Actions\DeleteAction::make(),
+                    ->url(fn (Order $record): string => OrderResource::getUrl('view', ['record' => $record])),
+
+                DeleteAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }

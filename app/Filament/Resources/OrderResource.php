@@ -19,8 +19,8 @@ class OrderResource extends Resource
 {
     protected static ?string $model = Order::class;
     protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
-   
-protected static ?int $navigationSort = 5;
+    protected static ?int $navigationSort = 5;
+
     public static function form(Form $form): Form
     {
         return $form->schema([
@@ -107,25 +107,11 @@ protected static ?int $navigationSort = 5;
             ])
             ->filtersLayout(FiltersLayout::AboveContent)
             ->filters([
-                Filter::make('New')
-                    ->label('New')
-                    ->query(fn ($query) => $query->where('status', 'new')),
-
-                Filter::make('Processing')
-                    ->label('Processing')
-                    ->query(fn ($query) => $query->where('status', 'processing')),
-
-                Filter::make('Shipped')
-                    ->label('Shipped')
-                    ->query(fn ($query) => $query->where('status', 'shipped')),
-
-                Filter::make('Delivered')
-                    ->label('Delivered')
-                    ->query(fn ($query) => $query->where('status', 'delivered')),
-
-                Filter::make('Cancelled')
-                    ->label('Cancelled')
-                    ->query(fn ($query) => $query->where('status', 'cancelled')),
+                Filter::make('New')->query(fn ($query) => $query->where('status', 'new')),
+                Filter::make('Processing')->query(fn ($query) => $query->where('status', 'processing')),
+                Filter::make('Shipped')->query(fn ($query) => $query->where('status', 'shipped')),
+                Filter::make('Delivered')->query(fn ($query) => $query->where('status', 'delivered')),
+                Filter::make('Cancelled')->query(fn ($query) => $query->where('status', 'cancelled')),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
@@ -154,4 +140,12 @@ protected static ?int $navigationSort = 5;
             'view' => Pages\ViewOrder::route('/{record}'),
         ];
     }
+
+    // ✅ Add this to show widgets (like OrderStats) inside OrderResource pages
+   public static function getWidgets(): array
+{
+    return [
+        \App\Filament\Resources\OrderResource\Widgets\OrderStats::class,
+    ];
+}
 }

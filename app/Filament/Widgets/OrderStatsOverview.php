@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Filament\Resources\OrderResource\Widgets;
+namespace App\Filament\Widgets;
 
 use App\Models\Order;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Card;
 
-class OrderStats extends BaseWidget
+class OrderStatsOverview extends BaseWidget
 {
     protected function getCards(): array
     {
@@ -16,16 +16,17 @@ class OrderStats extends BaseWidget
 
         return [
             Card::make('Total Orders', number_format($totalOrders))
-                ->description('All-time total')
-                ->descriptionIcon('heroicon-o-trending-up'),
+                ->description('All-time total orders')
+                ->descriptionIcon('heroicon-o-shopping-bag')
+                ->color('success'),
 
             Card::make('Pending Orders', number_format($pendingOrders))
-                ->description('Awaiting fulfillment')
+                ->description('Awaiting processing')
                 ->descriptionIcon('heroicon-o-clock')
                 ->color('warning'),
 
             Card::make('Cancelled Orders', number_format($cancelledOrders))
-                ->description('Cancelled by users/admin')
+                ->description('Cancelled by user or system')
                 ->descriptionIcon('heroicon-o-x-circle')
                 ->color('danger'),
         ];
