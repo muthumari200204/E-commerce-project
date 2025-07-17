@@ -15,19 +15,9 @@ class OrderStats extends BaseWidget
         $cancelledOrders = Order::where('status', 'cancelled')->count();
 
         return [
-            Card::make('Total Orders', number_format($totalOrders))
-                ->description('All-time total')
-                ->descriptionIcon('heroicon-o-trending-up'),
-
-            Card::make('Pending Orders', number_format($pendingOrders))
-                ->description('Awaiting fulfillment')
-                ->descriptionIcon('heroicon-o-clock')
-                ->color('warning'),
-
-            Card::make('Cancelled Orders', number_format($cancelledOrders))
-                ->description('Cancelled by users/admin')
-                ->descriptionIcon('heroicon-o-x-circle')
-                ->color('danger'),
+            Card::make('Total Orders', number_format($totalOrders)),
+            Card::make('Pending Orders', number_format($pendingOrders)),
+            Card::make('Cancelled Orders', number_format($cancelledOrders)),
         ];
     }
 }
